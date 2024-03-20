@@ -1,7 +1,14 @@
 pub type ForceVector = (f32, f32);
+
+use std::any::Any;
+use rayon::prelude::*;
 use super::camera::*;
+use super::star::*;
 
 pub trait PhysObj {
+    
+    fn as_any(&self) -> &dyn Any;
+
     fn xpos(&self) -> f32;
     fn ypos(&self) -> f32;
     fn xvel(&self) -> f32;
@@ -77,7 +84,6 @@ pub fn calculate_gravity(body1: &dyn PhysObj, body2: &dyn PhysObj) -> ForceVecto
     // tor in my head )
 
 }
-
 pub fn update_gravity_physics(
     bodies: &mut Vec<Box<dyn PhysObj>>,
 //    ship: &mut dyn PhysObj
@@ -91,45 +97,63 @@ pub fn update_gravity_physics(
             bodies[j].add_vector((-fx, -fy));
         }
     }
-    /*
-    for i in 0..bodies.len() {
-        let (fx, fy) = calculate_gravity(bodies[i], ship);
-        let theta = f32:: atan2(fy, fx);
-        bodies[i].add_vector((fx, fy));
-        ship.add_vector((-fx, -fy))
-    }
-    */
 }
-pub fn check_collisions(stars: &mut Vec<Box<dyn PhysObj>>) {
-    for i in 0..stars.len() {
-        for j in i+1..stars.len() {
-            let dx = stars[j].xpos() - stars[i].xpos();
-            let dy = stars[j].ypos() - stars[i].ypos();
+
+/*
+pub fn update_gravity_physics(
+    bodies: &mut Vec<Box<dyn PhysObj>>,
+) {
+   bodies.par_iter_mut().enumerate().for_each(|(i, body_i)| {
+        for j in i+1..bodies.len() {
+            let (fx, fy) = calculate_gravity(&*body_i, &*bodies[j]);
+            let theta = f32::atan2(fy, fx);
+            body_i.add_vector((fx, fy));
+            bodies[j].add_vector((-fx, -fy));
+        }
+    });
+}
+
+*/
+pub fn check_collisions(bodies: &mut Vec<Box<dyn PhysObj>>) {
+    for i in 0..bodies.len() {
+        for j in i+1..bodies.len() {
+            let dx = bodies[j].xpos() - bodies[i].xpos();
+            let dy = bodies[j].ypos() - bodies[i].ypos();
 
             let distance = (dx*dx + dy*dy).sqrt();
 
             let nx = dx / distance;
             let ny = dy / distance;
             
-            let relx = (stars[i].xvel() - stars[j].xvel()).abs();
-            let rely = (stars[i].yvel() - stars[j].yvel()).abs();
-            if distance <= (stars[i].radius() + stars[j].radius() + 2.) {
-                if distance < (stars[i].radius() + stars[j].radius() + 2.) {
-                    // Calculate the overlap between the two circles (how much one circle
-                    // has penetrated into the other)
-                    let overlap = distance - (distance - stars[i].radius() + distance - stars[j].radius());
+            let relx = (bodies[i].xvel() - bodies[j].xvel()).abs();
+            let rely = (bodies[i].yvel() - bodies[j].yvel()).abs();
+            if distance <= (bodies[i].radius() + bodies[j].radius() + 2.) {
 
-                    // Displace the current circle along the normal by half of the overlap
-                    stars[i].update_xpos(-(overlap * nx / distance));
-                    stars[i].update_ypos(-(overlap * ny / distance));
-
-                    // Displace the other circle along the normal by half of the overlap
-                    stars[j].update_xpos((overlap * nx / distance));
-                    stars[j].update_ypos((overlap * ny / distance));
+                let potential_star1: Option<&Star> = bodies[i].as_any().downcast_ref::<Star>();
+                if let Some(star1) = potential_star1 {
+                    let potential_star2: Option<&Star> = bodies[j].as_any().downcast_ref::<Star>();
+                    if let Some(star2) = potential_star2 {
+                        //println!("Collsion between two stars dectected!");
+                    }
                 }
 
-                let dx = stars[j].xpos() - stars[i].xpos();
-                let dy = stars[j].ypos() - stars[i].ypos();
+
+                if distance < (bodies[i].radius() + bodies[j].radius() + 2.) {
+                    // Calculate the overlap between the two circles (how much one circle
+                    // has penetrated into the other)
+                    let overlap = distance - (distance - bodies[i].radius() + distance - bodies[j].radius());
+
+                    // Displace the current circle along the normal by half of the overlap
+                    bodies[i].update_xpos(-(overlap * nx / distance));
+                    bodies[i].update_ypos(-(overlap * ny / distance));
+
+                    // Displace the other circle along the normal by half of the overlap
+                    bodies[j].update_xpos((overlap * nx / distance));
+                    bodies[j].update_ypos((overlap * ny / distance));
+                }
+
+                let dx = bodies[j].xpos() - bodies[i].xpos();
+                let dy = bodies[j].ypos() - bodies[i].ypos();
 
                 let distance = (dx*dx + dy*dy).sqrt();
 
@@ -137,10 +161,8 @@ pub fn check_collisions(stars: &mut Vec<Box<dyn PhysObj>>) {
                 let ny = dy / distance;
  
                 // Calculate the relative velocity
-                let rvx = stars[j].xvel() - stars[i].xvel();
-                let rvy = stars[j].yvel() - stars[i].yvel();
-
-                // Calculate the relative velocity in terms of the normal direction
+                let rvx = bodies[j].xvel() - bodies[i].xvel();
+                let rvy = bodies[j].yvel() - bodies[i].yvel();
                 let norm_vec = rvx * nx + rvy * ny;
 
                 // Do not resolve if velocities are separating
@@ -150,17 +172,17 @@ pub fn check_collisions(stars: &mut Vec<Box<dyn PhysObj>>) {
 
                 // Calculate the impulse scalar
                 let e = 1.;  // Coefficient of restitution
-                let impulse = -(1. + e) * norm_vec / ((1. / stars[i].mass() as f32) +  (1. / stars[j].mass() as f32));
+                let impulse = -(1. + e) * norm_vec / ((1. / bodies[i].mass() as f32) +  (1. / bodies[j].mass() as f32));
 
                 // Apply impulse
                 let impulse_x = impulse * nx;
                 let impulse_y = impulse * ny;
-                let imass = stars[i].mass();
-                let jmass = stars[j].mass();
-                stars[i].update_xvel(-(1. / imass as f32 * impulse_x));
-                stars[i].update_yvel(-(1. / imass as f32 * impulse_y));
-                stars[j].update_xvel((1. / jmass as f32 * impulse_x));
-                stars[j].update_yvel((1. / jmass as f32 * impulse_y));
+                let imass = bodies[i].mass();
+                let jmass = bodies[j].mass();
+                bodies[i].update_xvel(-(1. / imass as f32 * impulse_x));
+                bodies[i].update_yvel(-(1. / imass as f32 * impulse_y));
+                bodies[j].update_xvel((1. / jmass as f32 * impulse_x));
+                bodies[j].update_yvel((1. / jmass as f32 * impulse_y));
             }
         }
     }

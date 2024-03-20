@@ -1,7 +1,9 @@
 use std::time::Instant;
 use macroquad::prelude::*;
+use macroquad::texture::*;
 use super::physics::*;
 use super::camera::*;
+use std::any::Any;
 
 pub struct PlayerShip {
     pub xpos: f32,
@@ -14,9 +16,15 @@ pub struct PlayerShip {
     //frames: Vec<Texture2D>,
     //frame_idx: usize,
     pub last_update: Instant,
+    pub texture: Texture2D,
 }
 
 impl PhysObj for PlayerShip {
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn xpos(&self) -> f32 { self.xpos }
     fn ypos(&self) -> f32 { self.ypos }
     fn xvel(&self) -> f32 { self.xvel }
@@ -78,8 +86,20 @@ fn draw(
         camera: &mut ZCamera, 
     ) {
         //let (tex_x, tex_y) = (self.frames[self.frame_idx].width(), self.frames[self.frame_idx].height());
-        let draw_x = (self.xpos as f64 - camera.xpos as f64) * camera.zoom;
-        let draw_y = (self.ypos as f64 - camera.ypos as f64) * camera.zoom;
+        let draw_x = (self.xpos as f64 - camera.xpos as f64) * camera.zoom - 150. * camera.zoom;
+        let draw_y = (self.ypos as f64 - camera.ypos as f64) * camera.zoom - 150. * camera.zoom;
+        
+        draw_texture_ex(
+            &self.texture,
+            draw_x as f32,
+            draw_y as f32,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(300. * camera.zoom as f32, 300. as f32 * camera.zoom as f32)),
+                ..Default::default()
+            }
+        );
+        /*
         draw_hexagon(
             draw_x as f32,
             draw_y as f32,
@@ -90,7 +110,6 @@ fn draw(
             GRAY,
         )
         //draw_texture(&self.frames[self.frame_idx], draw_x as f32 - (tex_x as f32 * scl_x as f32 / 2.), draw_y as f32 - (tex_y as f32 * scl_y as f32 / 2.), WHITE);
-        /*
         draw_texture_ex(
             &self.frames[self.frame_idx],
             draw_x as f32,
@@ -115,6 +134,7 @@ impl PlayerShip {
         mass: u64,
         radius: f32,
     ) -> PlayerShip {
+        let passthru_rad = radius as f32;
         PlayerShip {
             xpos,
             ypos,
@@ -124,9 +144,40 @@ impl PlayerShip {
             radius,
             force_vectors: Vec::new(),
             last_update: Instant::now(),
+            texture: create_ship_texture(passthru_rad),
         }
     }
+}
 
-
+pub fn create_ship_texture(radius: f32) -> Texture2D {
+    // Step 1: create a macroquad::texture::Image
+    // Step 2: turn that in to a Texture2D
+    // step 3: return that shit and profit
+    //
     
+
+    let clear_color = Color{
+        r: 0.,
+        g: 0.,
+        b: 0.,
+        a: 0.,
+    };
+
+    let (width, height) = (300, 300);
+
+    let (cx, cy) = (width as u16 / 2, height as u16 / 2);
+
+    let mut base_img_texture = Image::gen_image_color(width, height, clear_color);
+    
+    for w in 0..width {
+        for h in 0..height {
+            let (dx, dy) = (cx - w, cy - h);
+            let d = ((dx * dx) as f32 + (dy * dy) as f32).sqrt();
+            if d <= radius {
+                base_img_texture.set_pixel(w as u32, h as u32, WHITE);
+            }
+        }
+    };
+
+    Texture2D::from_image(&base_img_texture)
 }

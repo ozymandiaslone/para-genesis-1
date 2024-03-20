@@ -21,8 +21,8 @@ async fn main() {
         0.,
         0.,
         0.,
-        10000,
-        5.,
+        909999999999,
+        13.,
     );
 
     let mut grav_objs: Vec<Box<dyn PhysObj>> = Vec::new();
@@ -39,6 +39,7 @@ async fn main() {
                     screen_height() as f32
                 ).await;
             }
+
         }
         clear_background(BLACK);
         if let Some(ship) = grav_objs.first_mut() {
@@ -78,16 +79,16 @@ async fn main() {
 
 fn update_ship_velocity(mut player_ship: &mut Box<dyn PhysObj>) {
     if is_key_down(KeyCode::W) {
-        player_ship.update_yvel(-1.);
+        player_ship.update_yvel(-5.);
     };
     if is_key_down(KeyCode::A) {
-        player_ship.update_xvel(-1.);
+        player_ship.update_xvel(-5.);
     };
     if is_key_down(KeyCode::S) {
-        player_ship.update_yvel(1.);
+        player_ship.update_yvel(5.);
     };
     if is_key_down(KeyCode::D) {
-        player_ship.update_xvel(1.);
+        player_ship.update_xvel(5.);
     };
 }
 
