@@ -1,20 +1,34 @@
 use macroquad::prelude::*;
 
+mod menu;
 mod star;
 mod physics;
 mod camera;
 mod ships;
+mod texturetools;
 
+use menu::*;
 use physics::*;
 use star::*;
 use camera::*;
 use ships::*;
+use texturetools::*;
 
 #[macroquad::main("Yuh")]
 async fn main() {
+    let mut draw_vintage_window = false;
+    let mut esc_ticker = false;
     let mut loaded = false;
     let mut fs = false;
     let mut camera: ZCamera = ZCamera::new_origin();
+    let mut vintage_window = VintageWindow::new(
+        400,
+        220,
+        String::from("Vintage Window Pop-Up"),
+        String::from("ERROR: uh-oh... Stinky!"),
+        String::from("Ok"),
+        WindowType::Error
+    );
 
     let mut player_ship = PlayerShip::new(
         0.,
@@ -72,7 +86,17 @@ async fn main() {
             obj.update();
             obj.draw(&mut camera);
         }
+        handle_escape(&mut draw_vintage_window) ;
+        if draw_vintage_window {
+            vintage_window.draw();
+        }
         next_frame().await
+    }
+}
+
+fn handle_escape(draw_vintage_window: &mut bool) {
+    if is_key_pressed(KeyCode::Escape) {
+        *draw_vintage_window = !*draw_vintage_window;
     }
 }
 

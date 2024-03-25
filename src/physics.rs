@@ -2,10 +2,11 @@ pub type ForceVector = (f32, f32);
 
 use std::any::Any;
 use rayon::prelude::*;
+use crossbeam::thread;
 use super::camera::*;
 use super::star::*;
 
-pub trait PhysObj {
+pub trait PhysObj: Send + Sync {
     
     fn as_any(&self) -> &dyn Any;
 
@@ -84,36 +85,32 @@ pub fn calculate_gravity(body1: &dyn PhysObj, body2: &dyn PhysObj) -> ForceVecto
     // tor in my head )
 
 }
+
+/*
+pub fn update_gravity_physics(bodies: &mut Vec<Box<dyn PhysObj>>) {
+    bodies.par_iter_mut().enumerate().for_each(|(i, body_i)| {
+        let bodies_slice = bodies.split_at_mut(i + 1).1;
+        bodies_slice.iter_mut().enumerate().for_each(|(j, body_j)| {
+            if j > 0 { // Skip the first element since it's the same as body_i
+                let (fx, fy) = calculate_gravity(&**body_i, &**body_j);
+                body_i.add_vector((fx, fy));
+                body_j.add_vector((-fx, -fy));
+            }
+        });
+    });
+}
+*/
 pub fn update_gravity_physics(
     bodies: &mut Vec<Box<dyn PhysObj>>,
-//    ship: &mut dyn PhysObj
 ) {
-     // Calculate all the forces
     for i in 0..bodies.len() {
         for j in i+1..bodies.len() {
-            let (fx, fy) = calculate_gravity(&*bodies[i], &*bodies[j]);
-            let theta = f32::atan2(fy, fx);
+            let (fx, fy): (f32, f32) = calculate_gravity(&*bodies[i], &*bodies[j]);
             bodies[i].add_vector((fx, fy));
             bodies[j].add_vector((-fx, -fy));
         }
     }
 }
-
-/*
-pub fn update_gravity_physics(
-    bodies: &mut Vec<Box<dyn PhysObj>>,
-) {
-   bodies.par_iter_mut().enumerate().for_each(|(i, body_i)| {
-        for j in i+1..bodies.len() {
-            let (fx, fy) = calculate_gravity(&*body_i, &*bodies[j]);
-            let theta = f32::atan2(fy, fx);
-            body_i.add_vector((fx, fy));
-            bodies[j].add_vector((-fx, -fy));
-        }
-    });
-}
-
-*/
 pub fn check_collisions(bodies: &mut Vec<Box<dyn PhysObj>>) {
     for i in 0..bodies.len() {
         for j in i+1..bodies.len() {

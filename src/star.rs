@@ -1,11 +1,5 @@
 use macroquad::prelude::*;
 use std::time::{SystemTime, Instant, Duration};
-// This is all just to create the images we load into textures.
-// There has gotta be a better way :(
-use image::{ImageBuffer, Rgba, ImageOutputFormat};
-use std::io::Cursor;
-use std::fs::File;
-use std::io::Write;
 use std::any::Any;
 use ::rand::Rng;
 use noise::{NoiseFn, Perlin};
@@ -106,16 +100,10 @@ impl PhysObj for Star {
         &mut self, 
         camera: &mut ZCamera,
     ) {
-        let (tex_x, tex_y) = (self.frames[self.frame_idx].width(), self.frames[self.frame_idx].height());
         
         /*
-        ctx.draw(
-            surface, 
-            &self.frames[self.frame_idx], 
-            (self.xpos as i32 - (tex_x as i32 * scl_x as i32 / 2), self.ypos as i32 - (tex_y as i32 * scl_y as i32 / 2)), 
-            //(self.xpos as i32, self.ypos as i32),
-            &draw_config,
-        );
+        * I want to check and see if the star is within the bounds
+        * of the camera, and only draw it if it is. 
         */
         let draw_x = (self.xpos as f64 - 150. - camera.xpos as f64) * camera.zoom;
         let draw_y = (self.ypos as f64 - 150. - camera.ypos as f64) * camera.zoom;
@@ -306,7 +294,7 @@ pub async fn load_stars(
     win_width: f32,
     win_height: f32
 ) {
-    let desired_stars = 500;
+    let desired_stars = 200;
     /*
     stars.push(
         Box::new(

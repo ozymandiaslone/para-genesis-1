@@ -156,7 +156,7 @@ pub fn create_ship_texture(radius: f32) -> Texture2D {
     //
     
 
-    let clear_color = Color{
+    let clear_color = Color {
         r: 0.,
         g: 0.,
         b: 0.,
