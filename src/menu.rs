@@ -16,93 +16,148 @@ pub enum WindowType {
 pub struct VintageWindow {
     window_name: String,
     message_text: String,
+    line_two: String,
     button_text: String,
     width: u16,
     height: u16,
     texture: Texture2D,
     window_type: WindowType,
+    visible: bool,
 }
 
 impl VintageWindow {
-    pub fn new(width: u16, height: u16, window_name: String, message_text: String, button_text: String, window_type: WindowType) -> VintageWindow {
+    pub fn new(width: u16, height: u16, window_name: String, message_text: String, line_two: String, button_text: String, window_type: WindowType) -> VintageWindow {
         VintageWindow {
             window_name,
             message_text,
+            line_two,
             button_text,
             width,
             height,
             texture: create_vintage_window_texture(width, height, &window_type),
             window_type,
+            visible: false,
         }        
+    }
+
+    pub fn update(
+        &mut self,
+        quitting: &mut bool,
+    ) {
+        let draw_x = screen_width() / 2. - (self.width as f32 / 2.); 
+        let draw_y = screen_height() / 2. - (self.height as f32 / 2.);
+
+
+        let (mouse_x, mouse_y) = mouse_position(); 
+
+        let button_width = (self.width as f32 * 0.28) as u32;
+        let button_height = (self.height as f32 * 0.15) as u32;
+        let top_left_x = (self.width as f32 * 0.5) as u32 - (button_width / 2);
+        let top_left_y = (self.height as f32 * 0.7) as u32;
+
+        // top left corner of the square
+        let (x0, y0) = (self.width as f32 - self.width as f32 * 0.077, self.height as f32 * 0.025);
+
+        let side_len = (self.width as f32 - self.width as f32 * 0.01) as u32 - (self.width as f32 - self.width as f32 * 0.07) as u32;
+    
+
+        if self.visible {
+
+            if mouse_x as u32 >=(draw_x as u32 + top_left_x) 
+                && mouse_y as u32 >=(draw_y as u32 + top_left_y) 
+                && mouse_x as u32 <= (draw_x as u32 + top_left_x + button_width)
+                && mouse_y as u32 <= (draw_y as u32 + top_left_y + button_height) 
+                && is_mouse_button_pressed(MouseButton::Left)
+            {
+                self.visible = !self.visible;
+                *quitting = true;
+            }
+
+            if mouse_x as u32 >= (draw_x as u32 + x0 as u32)
+                && mouse_y as u32 >= (draw_y as u32 + y0 as u32)
+                && mouse_x as u32 <= (draw_x as u32 + x0 as u32 + side_len)
+                && mouse_y as u32 <= (draw_y as u32 + y0 as u32 + side_len)
+                && is_mouse_button_pressed(MouseButton::Left) 
+            {
+                self.visible = false;
+            }
+
+            
+        }
+
+        if is_key_pressed(KeyCode::Escape) {
+            self.visible = !self.visible;
+        }
     }
 
     pub fn draw(
         &mut self,
     ) {
-        
-        let draw_x = screen_width() / 2. - (self.width as f32 / 2.); 
-        let draw_y = screen_height() / 2. - (self.height as f32 / 2.);
+       if self.visible {
+            let draw_x = screen_width() / 2. - (self.width as f32 / 2.); 
+            let draw_y = screen_height() / 2. - (self.height as f32 / 2.);
 
-        draw_texture_ex(
-            &self.texture,
-            draw_x,
-            draw_y,
-            WHITE,
-            DrawTextureParams {
-                ..Default::default()
-            }
-        );
-        
-        let font_size = self.height as f32 * 0.12;
+            draw_texture_ex(
+                &self.texture,
+                draw_x,
+                draw_y,
+                WHITE,
+                DrawTextureParams {
+                    ..Default::default()
+                }
+            );
+            
+            let font_size = self.height as f32 * 0.12;
 
-        let button_width = (self.width as f32 * 0.28) as u32;
-        let button_height = (self.height as f32 * 0.15) as u32;
-        let top_left_x = (self.width as f32 * 0.5) - (button_width / 2) as f32;
-        let top_left_y = (self.height as f32 * 0.7) as u32 as f32;
+            let button_width = (self.width as f32 * 0.28) as u32;
+            let button_height = (self.height as f32 * 0.15) as u32;
+            let top_left_x = (self.width as f32 * 0.5) - (button_width / 2) as f32;
+            let top_left_y = (self.height as f32 * 0.7) as u32 as f32;
 
-        draw_text_ex(
-            self.button_text.as_str(),
-            top_left_x + (button_width as f32 * 0.04),
-            top_left_y + (button_height as f32 * 0.04),
-            TextParams {
-                font_size: font_size as u16,
-                color: BLACK,
-                ..Default::default()
-            }
-        );
+            draw_text_ex(
+                self.window_name.as_str(),
+                draw_x + (self.width as f32 * 0.015),
+                draw_y + (self.height as f32 * 0.11),
+                TextParams{
+                    font_size: font_size as u16,
+                    ..Default::default()
+                }
+            );
 
-        draw_text_ex(
-            self.window_name.as_str(),
-            draw_x + (self.width as f32 * 0.015),
-            draw_y + (self.height as f32 * 0.11),
-            TextParams{
-                font_size: font_size as u16,
-                ..Default::default()
-            }
-        );
-
-        draw_text_ex(
-            self.button_text.as_str(),
-            draw_x + top_left_x + (button_width as f32 * 0.37),
-            draw_y + top_left_y + (button_height as f32 * 0.01 + font_size * 0.9),
-            TextParams{
-                font_size: font_size as u16,
-                color: BLACK,
-                ..Default::default()
-            }
-        );
+            draw_text_ex(
+                self.button_text.as_str(),
+                draw_x + top_left_x + (button_width as f32 * 0.37),
+                draw_y + top_left_y + (button_height as f32 * 0.01 + font_size * 0.9),
+                TextParams{
+                    font_size: font_size as u16,
+                    color: BLACK,
+                    ..Default::default()
+                }
+            );
 
 
-        draw_text_ex(
-            self.message_text.as_str(),
-            draw_x + (self.width as f32 * 0.3),
-            draw_y + (self.height as f32 * 0.5),
-            TextParams{
-                font_size: font_size as u16,
-                color: BLACK,
-                ..Default::default()
-            }
-        );
+            draw_text_ex(
+                self.message_text.as_str(),
+                draw_x + (self.width as f32 * 0.3),
+                draw_y + (self.height as f32 * 0.5),
+                TextParams{
+                    font_size: font_size as u16,
+                    color: BLACK,
+                    ..Default::default()
+                }
+            );
+
+            draw_text_ex(
+                self.line_two.as_str(),
+                draw_x + (self.width as f32 * 0.3) + (self.width as f32 * 0.1),
+                draw_y + (self.height as f32 * 0.5) + (font_size),
+                TextParams{
+                    font_size: font_size as u16,
+                    color: BLACK,
+                    ..Default::default()
+                }
+            );
+        } 
     }
 }
 
@@ -204,10 +259,10 @@ fn draw_interactable_button(width: u32, height: u32, image: &mut Image) {
     let top_left_x = (width as f32 * 0.5) as u32 - (button_width / 2);
     let top_left_y = (height as f32 * 0.7) as u32;
 
-    draw_image_line(top_left_x, top_left_y, top_left_x + button_width, top_left_y, 6, image, line_color);
-    draw_image_line(top_left_x, top_left_y, top_left_x, top_left_y + button_height, 6, image, line_color);
-    draw_image_line(top_left_x, top_left_y + button_height, top_left_x + button_width, top_left_y + button_height, 6, image, line_color);
-    draw_image_line(top_left_x + button_width, top_left_y, top_left_x + button_width, top_left_y + button_height, 6, image, line_color);
+    draw_image_line(top_left_x, top_left_y, top_left_x + button_width, top_left_y, 3, image, line_color);
+    draw_image_line(top_left_x, top_left_y, top_left_x, top_left_y + button_height, 3, image, line_color);
+    draw_image_line(top_left_x, top_left_y + button_height, top_left_x + button_width, top_left_y + button_height, 3, image, line_color);
+    draw_image_line(top_left_x + button_width, top_left_y, top_left_x + button_width, top_left_y + button_height, 3, image, line_color);
 }
 
 fn draw_close_button(width: u32, height: u32, image: &mut Image) {

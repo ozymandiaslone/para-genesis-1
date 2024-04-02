@@ -7,9 +7,10 @@ use ::rand::distributions::{Distribution, Uniform};
 
 use super::physics::*;
 use super::camera::*;
+use super::mathtools::*;
 
-const WIDTH: u32 = 300;
-const HEIGHT: u32 = 300;
+const WIDTH: u32 = 1000;
+const HEIGHT: u32 = 1000;
 
 pub struct Star {
     xpos: f32,
@@ -105,8 +106,8 @@ impl PhysObj for Star {
         * I want to check and see if the star is within the bounds
         * of the camera, and only draw it if it is. 
         */
-        let draw_x = (self.xpos as f64 - 150. - camera.xpos as f64) * camera.zoom;
-        let draw_y = (self.ypos as f64 - 150. - camera.ypos as f64) * camera.zoom;
+        let draw_x = (self.xpos as f64 - (WIDTH as f64 / 2.) - camera.xpos as f64) * camera.zoom;
+        let draw_y = (self.ypos as f64 - (WIDTH as f64 / 2.) - camera.ypos as f64) * camera.zoom;
         //draw_texture(&self.frames[self.frame_idx], draw_x as f32 - (tex_x as f32 * scl_x as f32 / 2.), draw_y as f32 - (tex_y as f32 * scl_y as f32 / 2.), WHITE);
         draw_texture_ex(
             &self.frames[self.frame_idx],
@@ -178,11 +179,11 @@ pub fn create_star_texture(r: f32, temp: f32) -> Texture2D {
         a: 0.,
     };
 
-    let (width, height) = (300, 300);
+    let (width, height) = (WIDTH as u32, HEIGHT as u32);
 
     let (cx, cy) = (width as u16 / 2, height as u16 / 2);
 
-    let mut base_img_texture = Image::gen_image_color(width, height, clear_color);
+    let mut base_img_texture = Image::gen_image_color(width as u16, height as u16, clear_color);
 
     let perlin = Perlin::new(seed);
     let base_color = temp_to_color(temp);
@@ -193,7 +194,7 @@ pub fn create_star_texture(r: f32, temp: f32) -> Texture2D {
     for w in 0..width {
         for h in 0..height {
 
-            let (dx, dy) = (cx - w, cy - h);
+            let (dx, dy) = (cx as u32 - w, cy as u32 - h);
             let d = ((dx * dx) as f32 + (dy * dy) as f32).sqrt();
 
             //if this pixel is inside the radius of the circle...
@@ -260,21 +261,58 @@ fn fast_root(n :f32) -> f32 {
     1. / fast_inverse_sqrt(n)
 }
 
-async fn initialize_rand_star(win_width: f32, win_height: f32) -> Star {
+async fn initialize_rand_star(win_width: f32, win_height: f32, x1: f32, y1: f32) -> Star {
     let win_width = win_width as i32;
     let win_height = win_height as i32;
     let vel_distribution = Uniform::new(0.0f32, 2.0f32);
     let mut rng = ::rand::thread_rng();
     let mass = rng.gen_range(10000..1000000000000);
     let r = r_from_mass(mass as f32, (10000., 1000000000000.), (5., 20.)) / 2.;
+
+    let (xpos, ypos) = (rng.gen_range(-win_width..win_width * 2) as f32, rng.gen_range(-win_height..win_height * 2) as f32);
+    let dx = xpos - x1;
+    let dy = ypos - y1;
+
+    let t_1 = f32::atan(dx / dy);
+    print!("THETA ONE::::{}", t_1);
+
+
     Star::new(
-        rng.gen_range(-win_width..win_width * 2) as f32,
-        rng.gen_range(-win_height..win_height * 2) as f32,
+        xpos,
+        ypos,
         (vel_distribution.sample(&mut rng) - 1.) * 15.,
         (vel_distribution.sample(&mut rng) - 1.) * 15.,
         mass,
         r,
     ).await
+}
+
+
+pub async fn load_stars(
+    stars: &mut Vec<Box<dyn PhysObj>>,
+    win_width: f32,
+    win_height: f32
+) -> (f32, f32, u64) {
+    let desired_stars = 0;
+    let (big_x, big_y) = (win_width / 2., win_height / 2.);
+    let mass: u64 = 599999999999999999;
+    stars.push(
+        Box::new(
+            Star::new(
+                big_x,
+                big_y,
+                0.,
+                0.,
+                mass,
+                335.)
+            .await
+        )
+    );
+
+    for _ in 0..desired_stars {
+        stars.push(Box::new(initialize_rand_star(win_width, win_height, big_x, big_y).await));
+    }
+    (big_x, big_y, mass)
 }
 
 async fn initialize_particle(win_width: i32, win_height: i32) -> Star {
@@ -287,62 +325,4 @@ async fn initialize_particle(win_width: i32, win_height: i32) -> Star {
         1000000,
         1.,
     ).await
-}
-pub async fn load_stars(
-    loaded: &mut bool,
-    stars: &mut Vec<Box<dyn PhysObj>>,
-    win_width: f32,
-    win_height: f32
-) {
-    let desired_stars = 200;
-    /*
-    stars.push(
-        Box::new(
-            Star::new(
-                (win_width / 2.) + 400.,
-                win_height / 2., -15., -20.,
-                9999999999999,
-                55.)
-            .await
-        )
-    );
-    stars.push(
-        Box::new(
-            Star::new(
-                (win_width / 2.) - 400.,
-                win_height / 2.,
-                15.,
-                20.,
-                99999999999999,
-                55.)
-            .await
-        )
-    );
-    */
-    stars.push(
-        Box::new(
-            Star::new(
-                win_width / 2.,
-                win_height / 2.,
-                0.,
-                0.,
-                999999999999999,
-                55.)
-            .await
-        )
-    );
-
-    for _ in 0..desired_stars {
-        stars.push(Box::new(initialize_rand_star(win_width, win_height).await));
-        //stars.push(initialize_particle(win_width as i32, win_height as i32).await);
-    }
-    *loaded = true;
-
-}
-
-fn r_from_mass(mass: f32, from_range: (f32, f32), to_range: (f32, f32)) -> f32 {
-    let (from_min, from_max) = from_range;
-    let (to_min, to_max) = to_range;
-
-    (mass - from_min) / (from_max - from_min) * (to_max - to_min) + to_min
 }

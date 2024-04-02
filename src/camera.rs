@@ -9,7 +9,7 @@ impl ZCamera {
         ZCamera {
             xpos: 0., 
             ypos: 0.,
-            zoom: 1.,
+            zoom: 0.1,
         }
     }
     pub fn add_zoom(&mut self, dz: f32) {
