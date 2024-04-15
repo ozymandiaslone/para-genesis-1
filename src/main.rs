@@ -75,7 +75,7 @@ async fn main() {
         }
         update_gravity_physics(&mut grav_objs);
 
-        check_collisions(&mut grav_objs);
+        check_collisions(&mut grav_objs).await;
         let (mouse_wheel_x, mouse_wheel_y) = mouse_wheel();
         let (mouse_x, mouse_y) = mouse_position();
         let (mwx, mwy) = ((mouse_x / camera.zoom as f32) + camera.xpos, (mouse_y / camera.zoom as f32) + camera.ypos);
@@ -91,7 +91,7 @@ async fn main() {
                 let (new_x, new_y) = ((ship.xpos() / camera.zoom as f32) + camera.xpos, (ship.ypos() / camera.zoom as f32) + camera.ypos);
             }
         }
-        for obj in grav_objs.iter_mut() {
+        for obj in grav_objs.iter_mut().rev() {
             obj.update();
             obj.draw(&mut camera);
         }

@@ -266,6 +266,7 @@ async fn initialize_rand_star(win_width: f32, win_height: f32, x1: f32, y1: f32)
     let win_height = win_height as i32;
     let vel_distribution = Uniform::new(0.0f32, 2.0f32);
     let mut rng = ::rand::thread_rng();
+    // TODO CHANGE THIS - THREAT LEVEL: MIDNIGHT 
     let mass = rng.gen_range(10000..1000000000000);
     let r = r_from_mass(mass as f32, (10000., 1000000000000.), (5., 20.)) / 2.;
 

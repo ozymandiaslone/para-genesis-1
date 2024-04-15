@@ -10,8 +10,8 @@ use super::camera::*;
 use super::texturetools::*;
 use super::mathtools::*;
 
-const WIDTH: u32 = 500;
-const HEIGHT: u32 = 500;
+const WIDTH: u32 = 290;
+const HEIGHT: u32 = 290;
 
 pub struct RockyBody {
     xpos: f32,

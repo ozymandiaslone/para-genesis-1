@@ -5,6 +5,8 @@ use rayon::prelude::*;
 use crossbeam::thread;
 use super::camera::*;
 use super::star::*;
+use super::rockybody::*;
+use super::mathtools::*;
 
 pub trait PhysObj: Send + Sync {
     
@@ -111,7 +113,7 @@ pub fn update_gravity_physics(
         }
     }
 }
-pub fn check_collisions(bodies: &mut Vec<Box<dyn PhysObj>>) {
+pub async fn check_collisions(bodies: &mut Vec<Box<dyn PhysObj>>) {
     for i in 0..bodies.len() {
         for j in i+1..bodies.len() {
             let dx = bodies[j].xpos() - bodies[i].xpos();
@@ -125,14 +127,141 @@ pub fn check_collisions(bodies: &mut Vec<Box<dyn PhysObj>>) {
             let relx = (bodies[i].xvel() - bodies[j].xvel()).abs();
             let rely = (bodies[i].yvel() - bodies[j].yvel()).abs();
             if distance <= (bodies[i].radius() + bodies[j].radius() + 2.) {
-
+                // CASE - TWO STARS COLLIDING
                 let potential_star1: Option<&Star> = bodies[i].as_any().downcast_ref::<Star>();
                 if let Some(star1) = potential_star1 {
                     let potential_star2: Option<&Star> = bodies[j].as_any().downcast_ref::<Star>();
                     if let Some(star2) = potential_star2 {
-                        //println!("Collsion between two stars dectected!");
+                        let bigger_star = if star1.mass() >= star2.mass() { star1 } else {
+                            star2
+                        };
+                        let smaller_star = if star1.mass() < star2.mass() { star1 } else {
+                            star2
+                        };
+                        let new_body_mass = bigger_star.mass() + smaller_star.mass() / 2;
+                        // TODO CHANGE THIS - THREAT LEVEL: MIDNIGHT 
+                        let r = r_from_mass(new_body_mass as f32, (10000., 1000000000000.), (5., 20.)) / 2.;
+                        let new_box = Box::new(
+                            Star::new(
+                                bigger_star.xpos(),
+                                bigger_star.ypos(),
+                                bigger_star.xvel(),
+                                bigger_star.yvel(),
+                                new_body_mass,
+                                r
+                            ).await
+                        );
+                        bodies.remove(i);
+                        bodies.remove(j - 1);
+                        bodies.insert(i, new_box);
                     }
                 }
+                // CASE - STAR AND ROCKY BODY COLLIDING
+                let potential_star1: Option<&Star> = bodies[i].as_any().downcast_ref::<Star>();
+                let potential_star2: Option<&Star> = bodies[j].as_any().downcast_ref::<Star>();
+
+                let star = match (potential_star1, potential_star2) {
+                    (Some(star1), None) => Some(star1),
+                    (None, Some(star2)) => Some(star2),
+                    _ => None,
+                };
+
+                let potential_rocky_body1: Option<&RockyBody> = bodies[i].as_any().downcast_ref::<RockyBody>();
+                let potential_rocky_body2: Option<&RockyBody> = bodies[j].as_any().downcast_ref::<RockyBody>();
+
+                let rocky_body = match (potential_rocky_body1, potential_rocky_body2) {
+                    (Some(body1), None) => Some(body1),
+                    (None, Some(body2)) => Some(body2),
+                    _ => None,
+                };
+                
+                if let (Some(star), Some(rocky_body)) = (star, rocky_body) {
+                    let new_body_mass = star.mass() + rocky_body.mass() / 2;
+
+                    let mut r = r_from_mass(new_body_mass as f32, ( 59999999999999999., 5999999999999999999.), (300., 500.));
+                    if r > 500. {
+                        r = 500.;
+                    }
+
+                    let new_box = Box::new(
+                        Star::new(
+                            star.xpos(),
+                            star.ypos(),
+                            star.xvel(),
+                            star.yvel(),
+                            new_body_mass,
+                            r
+                        ).await
+                    );
+                    let empty_body = Box::new(
+                        RockyBody::new(
+                            0.,
+                            0.,
+                            0.,
+                            0.,
+                            0,
+                            0.,
+                        ).await
+                    );
+                    bodies.remove(j);
+                    bodies.insert(j, empty_body);
+                    bodies.remove(i);
+                    bodies.insert(i, new_box);
+                }
+
+
+
+
+
+                // CASE - TWO ROCKY BODIES COLLIDING
+                let potential_rocky_body1: Option<&RockyBody> = bodies[i].as_any().downcast_ref::<RockyBody>();
+                if let Some(rocky_body1) = potential_rocky_body1 {
+                    let potential_rocky_body2: Option<&RockyBody> = bodies[j].as_any().downcast_ref::<RockyBody>();
+                    if let Some(rocky_body2) = potential_rocky_body2 {
+                        let bigger_body = if rocky_body1.mass() >= rocky_body2.mass() { rocky_body1 } else {
+                            rocky_body2
+                        };
+                        let smaller_body = if rocky_body1.mass() < rocky_body2.mass() { rocky_body1 } else {
+                            rocky_body2 
+                        };
+                        let new_body_mass = bigger_body.mass() + smaller_body.mass() / 2;
+
+                        let mut r = r_from_mass(new_body_mass as f32, (10000000., 10000000000000000.), (5., 90.));
+                        if r > 90. {
+                            r = 90.
+                        }
+                        let new_box = Box::new(
+                            RockyBody::new(
+                                bigger_body.xpos(),
+                                bigger_body.ypos(),
+                                bigger_body.xvel(),
+                                bigger_body.yvel(),
+                                new_body_mass,
+                                r
+                            ).await
+                        );
+                        let empty_body = Box::new(
+                            RockyBody::new(
+                                0.,
+                                0.,
+                                0.,
+                                0.,
+                                0,
+                                0.,
+                            ).await
+                        );
+                        bodies.remove(j);
+                        bodies.insert(j, empty_body);
+                        bodies.remove(i);
+                        bodies.insert(i, new_box);
+                    }
+                }
+
+                // CASE - THE FIRST BODY IS THE PLAYER
+             
+
+
+                // CASE - THE SECOND BODY IS THE PLAYER
 
 
                 if distance < (bodies[i].radius() + bodies[j].radius() + 2.) {
@@ -183,6 +312,7 @@ pub fn check_collisions(bodies: &mut Vec<Box<dyn PhysObj>>) {
             }
         }
     }
+    bodies.retain( |body| body.mass() != 0 );
 }
 
 

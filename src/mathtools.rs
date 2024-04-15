@@ -46,3 +46,6 @@ pub fn r_from_mass(mass: f32, from_range: (f32, f32), to_range: (f32, f32)) -> f
 
     (mass - from_min) / (from_max - from_min) * (to_max - to_min) + to_min
 }
+
+
+
