@@ -216,7 +216,16 @@ pub fn create_star_texture(r: f32, temp: f32) -> Texture2D {
                 let mod_red = (red as f64 * (noise_val + 1.4) / 2.) as f32;
                 let mod_green = (green as f64 * (noise_val + 1.4) / 2.) as f32;
                 let mod_blue = (blue as f64 * (noise_val + 2.3) / 2.) as f32;
-                base_img_texture.set_pixel(w as u32, h as u32, Color{r: mod_red, g: mod_green, b: mod_blue, a: alpha});
+                base_img_texture.set_pixel(
+                    w as u32,
+                    h as u32,
+                    Color { 
+                        r: mod_red,
+                        g: mod_green,
+                        b: mod_blue,
+                        a: alpha
+                    }
+                );
             }
         }
     };

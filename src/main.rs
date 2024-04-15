@@ -108,16 +108,16 @@ async fn main() {
 
 fn update_ship_velocity(mut player_ship: &mut Box<dyn PhysObj>) {
     if is_key_down(KeyCode::W) {
-        player_ship.update_yvel(-5.);
+        player_ship.update_yvel(-15.);
     };
     if is_key_down(KeyCode::A) {
-        player_ship.update_xvel(-5.);
+        player_ship.update_xvel(-15.);
     };
     if is_key_down(KeyCode::S) {
-        player_ship.update_yvel(5.);
+        player_ship.update_yvel(15.);
     };
     if is_key_down(KeyCode::D) {
-        player_ship.update_xvel(5.);
+        player_ship.update_xvel(15.);
     };
 }
 

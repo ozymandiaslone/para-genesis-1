@@ -228,15 +228,22 @@ async fn create_rocky_body(mass: u64, radius: f32) -> Texture2D {
         b: 0.,
         a: 0.,
     };
+    let cloud_perlin = Perlin::new(seed + 1);
     let (width, height) = (WIDTH as u16, HEIGHT as u16);
     let (cx, cy) = (width as u16 / 2, height as u16 / 2);
     let mut base_img_texture = Image::gen_image_color(width, height, clear_color);
+    let mut cloud_layer = Image::gen_image_color(width, height, clear_color);
     // LAND LAYER
     for w in 0..width {
         for h in 0..height {
             let dx = (w - cx);
             let dy = (h - cy);
             let d = (((dx * dx) + (dy * dy)) as f32).sqrt();
+
+            let p = radius + radius * 0.3;
+            let v = p - radius;
+
+
             if d <= radius {
                 let val = perlin.get([w as f64 / 91., h as f64 / 92.]);
                 let val = (val + 1.0) / 2.0;
@@ -247,9 +254,25 @@ async fn create_rocky_body(mass: u64, radius: f32) -> Texture2D {
                     a: 1.,
                 };
                 base_img_texture.set_pixel(w as u32, h as u32, color);
+
             }
+
+            if d <= p {
+                let q = d - radius;
+                let mut cloud_val = cloud_perlin.get([w as f64 / 50., h as f64 / 20.]);
+                cloud_val = (cloud_val + 1.) / 2.;
+                let cloud_cover: Color = Color {
+                    r: 0.7 + 0.3 * cloud_val as f32,
+                    g: 0.7 + 0.3 * cloud_val as f32,
+                    b: 1.,
+                    a: (0.5 * cloud_val as f32) * (1. - q / v),
+                };
+                cloud_layer.set_pixel(w as u32, h as u32, cloud_cover)
+            } 
         }
     }
+
+    base_img_texture.overlay(&cloud_layer);
     Texture2D::from_image(&base_img_texture)
 }
 
