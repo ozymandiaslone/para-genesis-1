@@ -11,6 +11,7 @@ use super::mathtools::*;
 pub trait PhysObj: Send + Sync {
     
     fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 
     fn xpos(&self) -> f32;
     fn ypos(&self) -> f32;

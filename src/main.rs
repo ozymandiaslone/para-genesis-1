@@ -8,6 +8,7 @@ mod camera;
 mod ships;
 mod texturetools;
 mod mathtools;
+mod life;
 
 use menu::*;
 use physics::*;
@@ -15,6 +16,7 @@ use star::*;
 use rockybody::*;
 use camera::*;
 use ships::*;
+use life::*;
 use texturetools::*;
 use mathtools::*;
 
@@ -44,6 +46,7 @@ async fn main() {
         13.,
     );
 
+
     let mut grav_objs: Vec<Box<dyn PhysObj>> = Vec::new();
     grav_objs.push(Box::new(player_ship));
 
@@ -56,6 +59,7 @@ async fn main() {
                     screen_width() as f32,
                     screen_height() as f32
                 ).await;
+                load_civilization(&mut grav_objs);
                 load_rocky_bodies(
                     &mut loaded,
                     &mut grav_objs,
@@ -95,6 +99,7 @@ async fn main() {
             obj.update();
             obj.draw(&mut camera);
         }
+        update_ships_desired_pos(&mut grav_objs);
         vintage_window.update(&mut quitting);
         vintage_window.draw();
 
@@ -108,16 +113,16 @@ async fn main() {
 
 fn update_ship_velocity(mut player_ship: &mut Box<dyn PhysObj>) {
     if is_key_down(KeyCode::W) {
-        player_ship.update_yvel(-15.);
+        player_ship.update_yvel(-45.);
     };
     if is_key_down(KeyCode::A) {
-        player_ship.update_xvel(-15.);
+        player_ship.update_xvel(-45.);
     };
     if is_key_down(KeyCode::S) {
-        player_ship.update_yvel(15.);
+        player_ship.update_yvel(55.);
     };
     if is_key_down(KeyCode::D) {
-        player_ship.update_xvel(15.);
+        player_ship.update_xvel(45.);
     };
 }
 
