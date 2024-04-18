@@ -1,19 +1,23 @@
 use macroquad::prelude::*;
 use std::time::Instant;
 use ::rand::Rng;
+use std::any::Any;
 use noise::{NoiseFn, Perlin};
 use ::rand::distributions::{Distribution, Uniform};
+
 use super::ships::*;
 use super::physics::*;
+use super::camera::*;
 
 pub struct Civilization {
     pub energy_output: f64,
     pub dexterity: f64,
     pub strength: f64,
     pub constitution: f64,
-    pub active_ships: Vec<usize>,
     pub damage: f64,
     pub size: f64,
+    pub seed: u32,
+    pub density_field: Image,
 } 
 
 impl Civilization {
@@ -25,15 +29,18 @@ impl Civilization {
         active_ships: Vec<usize>,
         damage: f64,
         size: f64,
+        seed: u32,
+        density_field: Image,
     ) -> Civilization{
         Civilization {
             energy_output,
             dexterity,
             strength,
             constitution,
-            active_ships,
             damage,
             size,
+            seed,
+            density_field,
         }
     }
 
@@ -46,20 +53,23 @@ impl Civilization {
         let constitution = rng.gen_range(0..1000000000) as f64 / 1000000000.;
         let size = rng.gen_range(0..1000000000) as f64 / 1000000000.;
         let damage = 0.;
-
+        let seed = 0;
+        let density_field = Image::gen_image_color(1000, 1000, WHITE);
+/*
         let active_ships = create_num_active_ships(
             ((strength + energy_output) / 2.) * size * 200.,
             bodies
         );
-    
+*/   
         Civilization { 
             energy_output, 
             dexterity,
             strength,
             constitution,
-            active_ships,
             damage,
-            size
+            size,
+            seed,
+            density_field,
         }
     }
 
@@ -69,7 +79,75 @@ impl Civilization {
 
 }
 
-pub fn create_num_active_ships(
+impl PhysObj for Civilization {
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+    // We don't really wanna be able to change 
+    // or meaningfully access any of
+    // these kinds values for a Civlization
+    //
+    // they don't really conceptually apply
+    
+    fn xpos(&self) -> f32 { 0. }
+    fn ypos(&self) -> f32 { 0. }
+    fn xvel(&self) -> f32 { 0. }
+    fn yvel(&self) -> f32 { 0. }
+    fn mass(&self) -> u64 { 0 }
+    fn radius(&self) -> f32 { 0. } 
+    fn update_xvel(&mut self, update_val: f32) {
+
+    }
+
+    fn update_yvel(&mut self, update_val: f32) {
+
+    }
+    
+    fn update_xpos(&mut self, update_val: f32) {
+
+    }
+
+    fn update_ypos(&mut self, update_val: f32) {
+
+    }
+
+    fn add_vector(&mut self, force_vec: ForceVector) {
+    }
+
+    fn force_vectors(&self) -> Vec<ForceVector> {
+        Vec::new()
+    }
+
+    fn update(&mut self) {
+
+    }
+
+    fn draw(&mut self, camera: &mut ZCamera) {
+        // TODO draw everything related to the civlization
+        let (width, height) = (self.density_field.width(), self.density_field.height());
+        // WARNING - This is temp. In the future we will want to fix its center pos to the 
+        // actual map center of the solar system. Right now i havent specified anything about the
+        // camera
+        //
+        // maybe im being silly though and forgetting how the camera works tho so ill have to look
+        // into it.
+        draw_texture_ex(
+            &Texture2D::from_image(&self.density_field),
+            (screen_width() as f32 / 2.) - (width as f32 / 2.),
+            (screen_height() as f32 / 2.) - (height as f32 / 2.),
+            WHITE,
+            DrawTextureParams {
+                ..Default::default()
+            }
+        )
+    }
+
+
+}
+
+pub fn create_n_active_ships(
     n: f64,
     bodies: &mut Vec<Box<dyn PhysObj>>,
 
