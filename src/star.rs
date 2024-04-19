@@ -102,7 +102,7 @@ impl PhysObj for Star {
 
     fn draw(
         &mut self, 
-        camera: &mut ZCamera,
+        camera: &ZCamera,
     ) {
         
         /*

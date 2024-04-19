@@ -15,4 +15,11 @@ impl ZCamera {
     pub fn add_zoom(&mut self, dz: f32) {
         self.zoom += dz as f64 / 2.;
     }
+    pub fn clone(&self) -> ZCamera {
+        ZCamera {
+            xpos: self.xpos,
+            ypos: self.ypos,
+            zoom: self.zoom,
+        }
+    }
 }

@@ -103,7 +103,7 @@ impl PhysObj for RockyBody {
 
     fn draw(
         &mut self, 
-        camera: &mut ZCamera,
+        camera: &ZCamera,
     ) {
         /*
         * TODO

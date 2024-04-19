@@ -87,7 +87,7 @@ impl PhysObj for PlayerShip {
     }
     fn draw(
         &mut self,
-        camera: &mut ZCamera, 
+        camera: &ZCamera, 
     ) {
         //let (tex_x, tex_y) = (self.frames[self.frame_idx].width(), self.frames[self.frame_idx].height());
         let draw_x = (self.xpos as f64 - camera.xpos as f64) * camera.zoom - 150. * camera.zoom;
@@ -149,6 +149,19 @@ impl PlayerShip {
             force_vectors: Vec::new(),
             last_update: Instant::now(),
             texture: create_ship_texture(passthru_rad),
+        }
+    }
+    pub fn clone(&self) -> PlayerShip {
+        PlayerShip {
+            xpos: self.xpos,
+            ypos: self.ypos,
+            xvel: self.xvel,
+            yvel: self.yvel,
+            mass: self.mass,
+            radius: self.radius,
+            force_vectors: self.force_vectors.clone(),
+            last_update: self.last_update,
+            texture: self.texture.clone(),
         }
     }
 }
@@ -332,7 +345,7 @@ impl PhysObj for Ship {
     }
     fn draw(
         &mut self,
-        camera: &mut ZCamera, 
+        camera: &ZCamera, 
     ) {
         //let (tex_x, tex_y) = (self.frames[self.frame_idx].width(), self.frames[self.frame_idx].height());
         let draw_x = (self.xpos as f64 - camera.xpos as f64) * camera.zoom - 150. * camera.zoom;

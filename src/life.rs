@@ -17,7 +17,7 @@ pub struct Civilization {
     pub damage: f64,
     pub size: f64,
     pub seed: u32,
-    pub density_field: Image,
+    pub density_field: Texture2D,
 } 
 
 impl Civilization {
@@ -30,7 +30,7 @@ impl Civilization {
         damage: f64,
         size: f64,
         seed: u32,
-        density_field: Image,
+        density_field: Texture2D,
     ) -> Civilization{
         Civilization {
             energy_output,
@@ -44,7 +44,7 @@ impl Civilization {
         }
     }
 
-    pub fn new_rand( bodies: &mut Vec<Box<dyn PhysObj>> ) -> Civilization {
+    pub fn new_rand( /*bodies: &mut Vec<Box<dyn PhysObj>> */ ) -> Civilization {
 
         let mut rng = ::rand::thread_rng();
         let energy_output = rng.gen_range(0..1000000000) as f64 / 1000000000.;
@@ -54,14 +54,14 @@ impl Civilization {
         let size = rng.gen_range(0..1000000000) as f64 / 1000000000.;
         let damage = 0.;
         let seed = 0;
-        let density_field = Image::gen_image_color(1000, 1000, WHITE);
+        let density_field = Texture2D::from_image(&Image::gen_image_color(1000, 1000, WHITE));
 /*
         let active_ships = create_num_active_ships(
             ((strength + energy_output) / 2.) * size * 200.,
             bodies
         );
 */   
-        Civilization { 
+        return Civilization { 
             energy_output, 
             dexterity,
             strength,
@@ -70,7 +70,8 @@ impl Civilization {
             size,
             seed,
             density_field,
-        }
+        };
+
     }
 
     pub fn ship_ap(&self) -> f64 {
@@ -124,7 +125,7 @@ impl PhysObj for Civilization {
 
     }
 
-    fn draw(&mut self, camera: &mut ZCamera) {
+    fn draw(&mut self, camera: &ZCamera) {
         // TODO draw everything related to the civlization
         let (width, height) = (self.density_field.width(), self.density_field.height());
         // WARNING - This is temp. In the future we will want to fix its center pos to the 
@@ -134,14 +135,15 @@ impl PhysObj for Civilization {
         // maybe im being silly though and forgetting how the camera works tho so ill have to look
         // into it.
         draw_texture_ex(
-            &Texture2D::from_image(&self.density_field),
+            &self.density_field,
             (screen_width() as f32 / 2.) - (width as f32 / 2.),
             (screen_height() as f32 / 2.) - (height as f32 / 2.),
             WHITE,
             DrawTextureParams {
                 ..Default::default()
             }
-        )
+        );
+        println!("INFO: Drew texture.");
     }
 
 
@@ -181,12 +183,10 @@ pub fn create_n_active_ships(
     ships_idx
 }
 
-pub fn load_civilization(
-    bodies: &mut Vec<Box<dyn PhysObj>>,
-) {
-    Civilization::new_rand(bodies);
+pub fn load_civilization (
+) -> Civilization {
+    Civilization::new_rand()
 }
-
 
 pub fn update_ships_desired_pos(
     bodies: &mut Vec<Box<dyn PhysObj>>,

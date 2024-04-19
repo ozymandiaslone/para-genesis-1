@@ -24,7 +24,7 @@ pub trait PhysObj: Send + Sync {
     fn update_xvel(&mut self, update_val: f32);
     fn update_yvel(&mut self, update_val: f32);
     fn add_vector(&mut self, force_vec: ForceVector);
-    fn draw(&mut self, camera: &mut ZCamera);
+    fn draw(&mut self, camera: &ZCamera);
     fn update_xpos(&mut self, update_val: f32);
     fn update_ypos(&mut self, update_val: f32);
 }
@@ -142,7 +142,7 @@ pub async fn check_collisions(bodies: &mut Vec<Box<dyn PhysObj>>) {
                         let new_body_mass = bigger_star.mass() + smaller_star.mass() / 2;
                         // TODO CHANGE THIS - THREAT LEVEL: MIDNIGHT 
                         let r = r_from_mass(new_body_mass as f32, (10000., 1000000000000.), (5., 20.)) / 2.;
-                        let new_box = Box::new(
+                        let new_box: Box<dyn PhysObj> = Box::new(
                             Star::new(
                                 bigger_star.xpos(),
                                 bigger_star.ypos(),
@@ -184,7 +184,7 @@ pub async fn check_collisions(bodies: &mut Vec<Box<dyn PhysObj>>) {
                         r = 500.;
                     }
 
-                    let new_box = Box::new(
+                    let new_box: Box<dyn PhysObj> = Box::new(
                         Star::new(
                             star.xpos(),
                             star.ypos(),
@@ -194,7 +194,7 @@ pub async fn check_collisions(bodies: &mut Vec<Box<dyn PhysObj>>) {
                             r
                         ).await
                     );
-                    let empty_body = Box::new(
+                    let empty_body: Box<dyn PhysObj> = Box::new(
                         RockyBody::new(
                             0.,
                             0.,
@@ -231,7 +231,7 @@ pub async fn check_collisions(bodies: &mut Vec<Box<dyn PhysObj>>) {
                         if r > 90. {
                             r = 90.
                         }
-                        let new_box = Box::new(
+                        let new_box: Box<dyn PhysObj> = Box::new(
                             RockyBody::new(
                                 bigger_body.xpos(),
                                 bigger_body.ypos(),
@@ -241,7 +241,7 @@ pub async fn check_collisions(bodies: &mut Vec<Box<dyn PhysObj>>) {
                                 r
                             ).await
                         );
-                        let empty_body = Box::new(
+                        let empty_body: Box<dyn PhysObj> = Box::new(
                             RockyBody::new(
                                 0.,
                                 0.,
