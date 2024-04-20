@@ -36,7 +36,7 @@ impl VintageWindow {
             height,
             texture: create_vintage_window_texture(width, height, &window_type),
             window_type,
-            visible: true,
+            visible: false,
         }        
     }
 

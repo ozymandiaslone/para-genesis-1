@@ -21,7 +21,9 @@ pub struct Game {
     universe: Vec<StarSystem>,
     camera:  ZCamera,
     player: Player,
-    //TEMP - TODO make a trait for ui
+    //TEMP - TODO make a trait for ui so we can
+    // do our signature fucked up 
+    // solution : `Vec<Box<dyn UI>>`
     ui_elements: Vec<VintageWindow>,
 }
 
@@ -35,8 +37,11 @@ impl Game {
         universe.push(StarSystem::new_rand(player.clone()).await);
         let mut ui_elements = Vec::new();
         ui_elements.push(VintageWindow::new(
-            400, 200, String::from("Test"), String::from("Line 1"), String::from("Line 2"),
-            String::from("Ok"), WindowType::Error 
+            400, 200, String::from("We got a lil quitter?"),
+            String::from("Daaamn... wtf"),
+            String::from("lil pussy tryna quit?"),
+            String::from("ye"),
+            WindowType::Error 
         ));
 
         Game {

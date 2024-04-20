@@ -1,5 +1,6 @@
 use std::any::Any;
 use macroquad::prelude::*;
+use std::time::*;
 
 use super::ships::*;
 use super::physics::*;
@@ -7,7 +8,6 @@ use super::camera::*;
 
 
 pub struct Player {
-    pub ship: PlayerShip, 
     xpos: f32,
     ypos: f32,
     xvel: f32,
@@ -15,6 +15,9 @@ pub struct Player {
     mass: u64,
     radius: f32,
     force_vecs: Vec<ForceVector>,
+    last_update: Instant,
+    texture: Texture2D,
+//    create_ship_texture(passthru_rad),
 }
 
 impl Player {
@@ -24,18 +27,9 @@ impl Player {
         let xvel = 0.;
         let yvel = 0.;
         let mass = 90999999999;
-        let radius = 14.;
+        let radius = 30.;
         let force_vecs = vec![(0., 0.,)];
-        let ship = PlayerShip::new(
-            xpos,
-            ypos,
-            xvel,
-            yvel,
-            mass,
-            radius,
-        );
         Player{
-            ship,
             xpos,
             ypos,
             xvel,
@@ -43,8 +37,30 @@ impl Player {
             mass,
             radius,
             force_vecs,
+            last_update: Instant::now(),
+            texture: create_ship_texture(radius),
         }
     }
+
+    fn update_ship_velocity(&mut self) {
+        if is_key_down(KeyCode::W) {
+            self.update_yvel(-45.);
+        };
+        if is_key_down(KeyCode::A) {
+            self.update_xvel(-45.);
+        };
+        if is_key_down(KeyCode::S) {
+            self.update_yvel(55.);
+        };
+        if is_key_down(KeyCode::D) {
+            self.update_xvel(45.);
+        };
+        if is_key_down(KeyCode::Space) {
+            self.update_xvel(-self.xvel());
+            self.update_yvel(-self.yvel());
+        }
+    }
+
     pub fn clone(&self) -> Player {
         Player {
             xpos: self.xpos,
@@ -54,7 +70,8 @@ impl Player {
             mass: self.mass,
             radius: self.radius,
             force_vecs: self.force_vecs.clone(),
-            ship: self.ship.clone(),
+            last_update: self.last_update,
+            texture: self.texture.clone(),
         }
     }
 }
@@ -98,34 +115,55 @@ impl PhysObj for Player {
     }
 
     fn update(&mut self) {
-        update_ship_velocity(&mut self.ship);
+        
+        let now = Instant::now();
+        let elapsed = now.duration_since(self.last_update);
+
+        
+        let mut final_vector: ForceVector = (0., 0.);
+        //assume this self as a force_vectors full of vectors
+        for i in 0..self.force_vecs.len() {
+            final_vector.0 += self.force_vecs[i].0;
+            final_vector.1 += self.force_vecs[i].1;
+        }
+        self.force_vecs = Vec::new();
+
+        let ax = final_vector.0 / self.mass as f32;
+        let ay = final_vector.1 / self.mass as f32;
+        
+        // v = at
+        self.xvel += ax * elapsed.as_secs_f32(); 
+        self.yvel += ay * elapsed.as_secs_f32();
+
+        self.xpos += self.xvel * elapsed.as_secs_f32();
+        self.ypos += self.yvel * elapsed.as_secs_f32();
+        
+        self.last_update = now;
+        
+        self.update_ship_velocity();
     }
 
     fn draw(&mut self, camera: &ZCamera) {
-        self.ship.draw(camera);
+
+        let draw_x = (self.xpos as f64 - camera.xpos as f64) * camera.zoom - 150. * camera.zoom;
+        let draw_y = (self.ypos as f64 - camera.ypos as f64) * camera.zoom - 150. * camera.zoom;
+        
+        draw_texture_ex(
+            &self.texture,
+            draw_x as f32,
+            draw_y as f32,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(300. * camera.zoom as f32, 300. as f32 * camera.zoom as f32)),
+                ..Default::default()
+            }
+        );
+        
+
     }
 }
 
-fn update_ship_velocity(mut player_ship: &mut PlayerShip) {
-    if is_key_down(KeyCode::W) {
-        player_ship.update_yvel(-45.);
-    };
-    if is_key_down(KeyCode::A) {
-        player_ship.update_xvel(-45.);
-    };
-    if is_key_down(KeyCode::S) {
-        player_ship.update_yvel(55.);
-    };
-    if is_key_down(KeyCode::D) {
-        player_ship.update_xvel(45.);
-    };
-    if is_key_down(KeyCode::Space) {
-        player_ship.update_xvel(-player_ship.xvel());
-        player_ship.update_yvel(-player_ship.yvel());
-    }
-}
-
-fn lerp(body: &mut Box<dyn PhysObj>, camera: &mut ZCamera) {
+pub fn follow_ship(body: &mut Box<dyn PhysObj>, camera: &mut ZCamera) {
     let lerp_factor = 0.6; // Adjust lerp_factor as needed for smooth transitions
 
     // Get half the screen width and height in pixels

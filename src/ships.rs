@@ -348,6 +348,7 @@ impl PhysObj for Ship {
         camera: &ZCamera, 
     ) {
         //let (tex_x, tex_y) = (self.frames[self.frame_idx].width(), self.frames[self.frame_idx].height());
+
         let draw_x = (self.xpos as f64 - camera.xpos as f64) * camera.zoom - 150. * camera.zoom;
         let draw_y = (self.ypos as f64 - camera.ypos as f64) * camera.zoom - 150. * camera.zoom;
         

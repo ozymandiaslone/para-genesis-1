@@ -30,27 +30,22 @@ async fn main() {
     *
     *
     let mut quitting = false;
-
-    let mut draw_vintage_window = false;
-    let mut vintage_window = VintageWindow::new(
-        400,
-        220,
-        String::from("Vintage Window Pop-Up"),
-        String::from("ERROR: APATHY DETECTED!"),
-        String::from("GIVE UP"),
-        String::from("Ok"),
-        WindowType::Error
-    );
 */
 
     let mut game = Game::new().await;
 
     loop {
+        while screen_width() < 900. {
+            set_fullscreen(true);
+            next_frame().await
+        }
         clear_background(BLACK);
         game.update().await;
         game.draw();
         next_frame().await
+
     /*
+        
         
         if let Some(ship) = grav_objs.first_mut() {
             update_ship_velocity(ship);

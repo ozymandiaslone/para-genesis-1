@@ -12,6 +12,7 @@ use super::camera::*;
 use super::player::*;
 use super::mathtools::*;
 use super::life::*;
+use super::ships::*;
 
 const WIDTH: u32 = 1000;
 const HEIGHT: u32 = 1000;
@@ -112,11 +113,16 @@ impl PhysObj for StarSystem {
     fn update(&mut self){
         for body in self.bodies.iter_mut() {
             body.update();
+
         }
+        if let Some(ship) = self.bodies.first_mut() {
+            follow_ship(ship, &mut self.camera);
+        }
+     
     }
     fn draw(&mut self, dummy_cam: &ZCamera) {
         for body in self.bodies.iter_mut() {
-            body.draw(&dummy_cam);
+            body.draw(&self.camera);
         }
     }
 }
