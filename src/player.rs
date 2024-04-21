@@ -17,7 +17,6 @@ pub struct Player {
     force_vecs: Vec<ForceVector>,
     last_update: Instant,
     texture: Texture2D,
-//    create_ship_texture(passthru_rad),
 }
 
 impl Player {
@@ -111,7 +110,6 @@ impl PhysObj for Player {
 
     fn add_vector(&mut self, force_vec: ForceVector) {
         self.force_vecs.push(force_vec);
-        
     }
 
     fn update(&mut self) {
@@ -144,7 +142,6 @@ impl PhysObj for Player {
     }
 
     fn draw(&mut self, camera: &ZCamera) {
-
         let draw_x = (self.xpos as f64 - camera.xpos as f64) * camera.zoom - 150. * camera.zoom;
         let draw_y = (self.ypos as f64 - camera.ypos as f64) * camera.zoom - 150. * camera.zoom;
         
@@ -158,24 +155,18 @@ impl PhysObj for Player {
                 ..Default::default()
             }
         );
-        
-
     }
 }
 
 pub fn follow_ship(body: &mut Box<dyn PhysObj>, camera: &mut ZCamera) {
-    let lerp_factor = 0.6; // Adjust lerp_factor as needed for smooth transitions
+//    let lerp_factor = 0.6; // Adjust lerp_factor as needed for smooth transitions
 
     // Get half the screen width and height in pixels
     let half_width_pixels = screen_width() / 2.0;
     let half_height_pixels = screen_height() / 2.0;
 
-
     camera.xpos = -(half_width_pixels / camera.zoom as f32) + body.xpos();
     camera.ypos = -(half_height_pixels / camera.zoom as f32) + body.ypos(); 
-
-    
-
 }
 
 

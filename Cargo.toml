@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 crossbeam = "0.8.4"
 image = "0.24.9"
-macroquad = { git = "https://github.com/not-fl3/macroquad" }
+macroquad = { git = "https://github.com/not-fl3/macroquad", features = ["audio"]}
 noise = "0.8.2"
 rand = "0.8.5"
 rayon = "1.9.0"

@@ -1,9 +1,11 @@
 use std::time::Instant;
+use macroquad::audio::*;
 use macroquad::prelude::*;
 use macroquad::texture::*;
 use super::physics::*;
 use super::camera::*;
 use std::any::Any;
+use super::game::*;
 
 use super::texturetools::*;
 
@@ -23,10 +25,12 @@ pub struct VintageWindow {
     texture: Texture2D,
     window_type: WindowType,
     visible: bool,
+    sounds: Vec<Sound>,
 }
 
 impl VintageWindow {
-    pub fn new(width: u16, height: u16, window_name: String, message_text: String, line_two: String, button_text: String, window_type: WindowType) -> VintageWindow {
+    pub fn new(width: u16, height: u16, window_name: String, message_text: String, line_two: String, button_text: String, window_type: WindowType, input_sound: Sound) -> VintageWindow {
+        let sounds = vec![input_sound];
         VintageWindow {
             window_name,
             message_text,
@@ -37,12 +41,13 @@ impl VintageWindow {
             texture: create_vintage_window_texture(width, height, &window_type),
             window_type,
             visible: false,
+            sounds,
         }        
     }
 
     pub fn update(
         &mut self,
-        quitting: &mut bool,
+        quitting: &mut Quitter,
     ) {
         let draw_x = screen_width() / 2. - (self.width as f32 / 2.); 
         let draw_y = screen_height() / 2. - (self.height as f32 / 2.);
@@ -70,7 +75,7 @@ impl VintageWindow {
                 && is_mouse_button_pressed(MouseButton::Left)
             {
                 self.visible = !self.visible;
-                *quitting = true;
+                *quitting = Quitter::Yes;
             }
 
             if mouse_x as u32 >= (draw_x as u32 + x0 as u32)
@@ -86,6 +91,9 @@ impl VintageWindow {
         }
 
         if is_key_pressed(KeyCode::Escape) {
+            if self.visible == false {
+                play_sound_once(&self.sounds[0]);
+            }
             self.visible = !self.visible;
         }
     }

@@ -23,17 +23,11 @@ use texturetools::*;
 use mathtools::*;
 use star_system::*;
 use player::*;
+use game::*;
 
 #[macroquad::main("Yuh")]
 async fn main() {
-    /* RELICT CODE
-    *
-    *
-    let mut quitting = false;
-*/
-
     let mut game = Game::new().await;
-
     loop {
         while screen_width() < 900. {
             set_fullscreen(true);
@@ -42,17 +36,16 @@ async fn main() {
         clear_background(BLACK);
         game.update().await;
         game.draw();
-        next_frame().await
 
-    /*
-        
-        
-        if let Some(ship) = grav_objs.first_mut() {
-            update_ship_velocity(ship);
-            lerp(ship, &mut camera);
+        match game.game_state {
+            GameState::Playing => {},
+            GameState::AboutToQuit => {},
+            GameState::StartingUp => {},
+            GameState::Quit => { break },
         }
-        update_gravity_physics(&mut grav_objs);
-
+        next_frame().await
+    /*
+        TODO REIMPLEMENT ZOOMING        
         let (mouse_wheel_x, mouse_wheel_y) = mouse_wheel();
         let (mouse_x, mouse_y) = mouse_position();
         let (mwx, mwy) = ((mouse_x / camera.zoom as f32) + camera.xpos, (mouse_y / camera.zoom as f32) + camera.ypos);
@@ -75,10 +68,6 @@ async fn main() {
 //        update_ships_desired_pos(&mut grav_objs);
         vintage_window.update(&mut quitting);
         vintage_window.draw();
-
-        if quitting {
-            break
-        }
 
     */
 

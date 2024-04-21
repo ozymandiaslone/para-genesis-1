@@ -113,12 +113,11 @@ impl PhysObj for StarSystem {
     fn update(&mut self){
         for body in self.bodies.iter_mut() {
             body.update();
-
         }
         if let Some(ship) = self.bodies.first_mut() {
             follow_ship(ship, &mut self.camera);
         }
-     
+             
     }
     fn draw(&mut self, dummy_cam: &ZCamera) {
         for body in self.bodies.iter_mut() {
