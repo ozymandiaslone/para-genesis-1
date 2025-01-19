@@ -29,7 +29,6 @@ pub struct StarSystem {
     pub radius: f32,
     pub camera: ZCamera,
     pub force_vectors: Vec<ForceVector>,
-
 }
 
 impl StarSystem {
@@ -79,6 +78,12 @@ impl StarSystem {
     // the most recently updated player in all the star systems
     // then, we make all those other star system players equal
     // to the game's player
+    //
+    // Okay im from over a year in the future and past me
+    // was really on one when making this code base
+    //
+    // I think in the modern day i would just hide 
+    // everything behind traits and RefCell Boxes & stuff.
     pub fn sync_player(player: &mut Player) {
          
     }

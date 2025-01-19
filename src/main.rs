@@ -12,20 +12,8 @@ mod mathtools;
 mod life;
 mod star_system;
 use game::*;
-use menu::*;
-use physics::*;
-use star::*;
-use rockybody::*;
-use camera::*;
-use ships::*;
-use life::*;
-use texturetools::*;
-use mathtools::*;
-use star_system::*;
-use player::*;
-use game::*;
 
-#[macroquad::main("Yuh")]
+#[macroquad::main("PARA-GENESIS")]
 async fn main() {
     let mut game = Game::new().await;
     loop {
@@ -74,11 +62,3 @@ async fn main() {
     }
 }
 
-
-
-fn log_clamp(value: f64, max_value: f64) -> f64 {
-    if value <= 0.01 {
-        return 0.1;
-    }
-    (max_value * f64::ln(value) / f64::ln(max_value)).min(max_value)
-}
